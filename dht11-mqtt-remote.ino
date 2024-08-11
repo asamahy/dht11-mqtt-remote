@@ -7,9 +7,9 @@ DHT11 dht11(4);
 const char* ssid1 = "SSID1";
 const char* password1 = "PASS1";
 
-// Backup network credentials
-const char* ssid2 = "SSID2";
-const char* password2 = "PASS2";
+// Backup networks
+const char* backup_ssids[] = {"SSID2", "SSID3", "SSID4"};
+const char* backup_passwords[] = {"PASS2", "PASS3", "PASS4"};
 
 const char* mqtt_server = "MQTT-SERVER";
 
@@ -49,11 +49,21 @@ void connect_to_wifi(const char* ssid, const char* password) {
 }
 
 void setup_wifi() {
+  // Attempt to connect to the primary WiFi
   connect_to_wifi(ssid1, password1);
 
+  // If the primary WiFi fails, attempt to connect to backup networks
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Trying backup WiFi...");
-    connect_to_wifi(ssid2, password2);
+    for (int i = 0; i < sizeof(backup_ssids) / sizeof(backup_ssids[0]); i++) {
+      Serial.print("Trying backup WiFi: ");
+      Serial.println(backup_ssids[i]);
+      connect_to_wifi(backup_ssids[i], backup_passwords[i]);
+
+      // Break the loop if connected successfully
+      if (WiFi.status() == WL_CONNECTED) {
+        break;
+      }
+    }
   }
 
   if (WiFi.status() != WL_CONNECTED) {
